@@ -72,7 +72,7 @@
                     </div>
                     <h3 class="text-xl font-semibold text-white mb-2">FuzzJet</h3>
                     <p class="text-gray-400 mb-4">A fast and modern fuzzer.</p>
-                    <button class="mt-auto w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition duration-150">
+                    <button @click="showModal = true; toolName = 'FuzzJet'" class="mt-auto w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition duration-150">
                         Notify Me
                     </button>
                 </div>
@@ -87,7 +87,7 @@
                     </div>
                     <h3 class="text-xl font-semibold text-white mb-2">GhostTunnel</h3>
                     <p class="text-gray-400 mb-4">The developer VPN.</p>
-                    <button class="mt-auto w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition duration-150">
+                    <button @click="showModal = true; toolName = 'GhostTunnel'" class="mt-auto w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition duration-150">
                         Notify Me
                     </button>
                 </div>
@@ -102,7 +102,7 @@
                     </div>
                     <h3 class="text-xl font-semibold text-white mb-2">RankCore</h3>
                     <p class="text-gray-400 mb-4">Boost your site's SEO.</p>
-                    <button class="mt-auto w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition duration-150">
+                    <button @click="showModal = true; toolName = 'RankCore'" class="mt-auto w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition duration-150">
                         Notify Me
                     </button>
                 </div>
@@ -117,7 +117,7 @@
                     </div>
                     <h3 class="text-xl font-semibold text-white mb-2">ToneMail</h3>
                     <p class="text-gray-400 mb-4">Rewrite emails with AI.</p>
-                    <button class="mt-auto w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition duration-150">
+                    <button @click="showModal = true; toolName = 'ToneMail'" class="mt-auto w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition duration-150">
                         Notify Me
                     </button>
                 </div>
@@ -143,6 +143,76 @@
         </div>
     </footer>
 
+    <!-- Notify Me Modal -->
+    <div x-data="{ showModal: false, toolName: '', email: '', submitted: false, error: false }" 
+         x-show="showModal" 
+         @keydown.escape.window="showModal = false" 
+         class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4" 
+         style="display: none;">
+        <div @click.away="showModal = false" class="bg-gray-800 rounded-lg p-8 max-w-md w-full shadow-xl border border-gray-700 relative">
+            <!-- Close Button -->
+            <button @click="showModal = false" class="absolute top-3 right-3 text-gray-500 hover:text-gray-300">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+
+            <div x-show="!submitted">
+                <h3 class="text-2xl font-bold text-white mb-2">Get notified about <span x-text="toolName"></span>!</h3>
+                <p class="text-gray-400 mb-6">Enter your email to be the first to know when it launches.</p>
+                
+                <!-- Replace YOUR_FORM_ID with your actual Formspree ID -->
+                <form @submit.prevent="submitForm()" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+                    <input type="hidden" name="tool" :value="toolName">
+                    <div>
+                        <label for="email" class="sr-only">Email address</label>
+                        <input x-model="email" type="email" name="email" id="email" required class="w-full bg-gray-700 border border-gray-600 text-white px-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-500 mb-4" placeholder="you@example.com">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md transition duration-150">
+                        Notify Me
+                    </button>
+                    <p x-show="error" class="text-red-500 text-sm mt-2">Something went wrong. Please try again.</p>
+                </form>
+            </div>
+
+            <div x-show="submitted" class="text-center">
+                 <h3 class="text-2xl font-bold text-white mb-2">Thank You!</h3>
+                 <p class="text-gray-400 mb-6">We'll let you know when <span x-text="toolName"></span> is ready.</p>
+                 <button @click="showModal = false" class="bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition duration-150">
+                     Close
+                 </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Potential JS links here -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        function submitForm() {
+            const form = event.target;
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: form.method,
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    this.submitted = true;
+                    this.error = false;
+                    this.email = ''; // Clear email field on success
+                } else {
+                    response.json().then(data => {
+                        if (Object.hasOwn(data, 'errors')) {
+                            // Handle validation errors from Formspree if needed
+                            console.error(data.errors.map(error => error.message).join(", "));
+                        } 
+                        this.error = true;
+                    })
+                }
+            }).catch(error => {
+                this.error = true;
+            });
+        }
+    </script>
 </body>
 </html> 
