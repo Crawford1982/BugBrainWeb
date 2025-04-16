@@ -299,7 +299,7 @@
                 <p class="text-gray-400 mb-6">Enter your email to be the first to know when it launches.</p>
                 
                 <!-- IMPORTANT: Replace YOUR_FORM_ID with your actual Formspree form endpoint ID -->
-                <form @submit.prevent="submitForm()" action="https://formspree.io/f/mldjvdry" method="POST">
+                <form @submit.prevent="submitForm($data)" action="https://formspree.io/f/mldjvdry" method="POST">
                     <input type="hidden" name="tool" :value="toolName">
                     <div>
                         <label for="email-modal" class="sr-only">Email address</label>
@@ -326,10 +326,10 @@
     <!-- Add script tag back in, now that Alpine is loaded via CDN -->
     <script>
         // Placed in body to ensure Alpine is ready
-        function submitForm() {
+        // Accept the Alpine data context as an argument
+        function submitForm(alpineInstance) {
             const form = event.target;
-            // Alpine is global when using CDN
-            const alpineInstance = form.closest('[x-data]').__x; 
+            // No need to find alpineInstance here, it's passed in
             const formData = new FormData(form);
             
             alpineInstance.error = false; // Reset error on new submission
