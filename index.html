@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#07080d" />
   <meta name="description" content="Independent security research — specification-led, bounded execution." />
   <meta property="og:title" content="BugBrain" />
@@ -117,7 +117,10 @@
     .wrap {
       width: min(1120px, calc(100% - 48px));
       margin: 0 auto;
-      padding: 56px 0 120px;
+      padding-top: calc(56px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
     }
 
     header {
@@ -202,6 +205,25 @@
     @media (max-width: 900px) {
       .hero { grid-template-columns: 1fr; }
       header { flex-direction: column; align-items: flex-start; }
+    }
+
+    @media (max-width: 520px) {
+      .diagram {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      .diagram div {
+        text-align: left;
+        padding: 12px 14px;
+      }
+      .stripe aside {
+        white-space: normal;
+        line-height: 1.5;
+      }
+      .feed {
+        font-size: 0.72rem;
+        word-break: break-word;
+      }
     }
 
     .hero-copy h1 {
@@ -518,8 +540,21 @@
       .bg-stack,
       .mark-badge::before,
       .hero-panel,
-      .noise {
+      .noise,
+      .scan {
         animation: none !important;
+      }
+      .hero-panel {
+        filter: none !important;
+      }
+      .feed .line {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+      }
+      .cursor-blink::after {
+        animation: none !important;
+        opacity: 0.7 !important;
       }
     }
   </style>
@@ -616,12 +651,16 @@
     (function () {
       document.getElementById("y").textContent = new Date().getFullYear();
 
+      var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
       var root = document.documentElement;
       function spotlight(e) {
         root.style.setProperty("--mx", e.clientX + "px");
         root.style.setProperty("--my", e.clientY + "px");
       }
-      window.addEventListener("mousemove", spotlight, { passive: true });
+      if (!reduceMotion) {
+        window.addEventListener("mousemove", spotlight, { passive: true });
+      }
 
       var sequences = [
         [
@@ -650,7 +689,11 @@
         lines.forEach(function (row, i) {
           var div = document.createElement("div");
           div.className = "line";
-          div.style.animationDelay = i * 0.09 + "s";
+          if (!reduceMotion) div.style.animationDelay = i * 0.09 + "s";
+          else {
+            div.style.opacity = "1";
+            div.style.transform = "none";
+          }
           var pref = document.createElement("span");
           pref.className = "prefix " + row.p;
           pref.textContent = row.t;
@@ -659,8 +702,8 @@
           feed.appendChild(div);
         });
         var blink = document.createElement("div");
-        blink.className = "line cursor-blink";
-        blink.style.animationDelay = lines.length * 0.09 + 0.2 + "s";
+        blink.className = reduceMotion ? "line" : "line cursor-blink";
+        if (!reduceMotion) blink.style.animationDelay = lines.length * 0.09 + 0.2 + "s";
         blink.style.opacity = "1";
         blink.style.transform = "none";
         blink.appendChild(document.createTextNode(""));
@@ -668,11 +711,11 @@
       }
 
       renderSequence();
-      setInterval(renderSequence, 8200);
+      if (!reduceMotion) setInterval(renderSequence, 8200);
 
       /* Subtle particle field */
       var c = document.getElementById("fx");
-      if (!c || !c.getContext || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      if (!c || !c.getContext || reduceMotion) return;
       var ctx = c.getContext("2d");
       var particles = [];
 
