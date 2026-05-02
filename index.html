@@ -8,6 +8,18 @@
   <meta property="og:title" content="BugBrain" />
   <meta property="og:description" content="Independent security research — specification-led, bounded execution." />
   <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://bugbrain.dev/" />
+  <meta property="og:image" content="https://bugbrain.dev/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:locale" content="en_US" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="BugBrain" />
+  <meta name="twitter:description" content="Independent security research — specification-led, bounded execution." />
+  <meta name="twitter:image" content="https://bugbrain.dev/og-image.png" />
+  <link rel="canonical" href="https://bugbrain.dev/" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>BugBrain</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -455,14 +467,28 @@
       transition: opacity 0.45s ease;
     }
 
-    .card:hover {
-      transform: translateY(-4px);
-      border-color: rgba(94, 234, 212, 0.35);
-      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.45);
+    @media (hover: hover) and (pointer: fine) {
+      .card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(94, 234, 212, 0.35);
+        box-shadow: 0 28px 70px rgba(0, 0, 0, 0.45);
+      }
+
+      .card:hover::before {
+        opacity: 1;
+      }
     }
 
-    .card:hover::before {
-      opacity: 1;
+    @media (hover: none), (pointer: coarse) {
+      .card:active {
+        transform: translateY(-2px);
+        border-color: rgba(94, 234, 212, 0.3);
+        box-shadow: 0 20px 52px rgba(0, 0, 0, 0.4);
+      }
+
+      .card:active::before {
+        opacity: 0.9;
+      }
     }
 
     .card h3 {
@@ -730,8 +756,10 @@
 
       function seed() {
         particles = [];
-        var count = Math.floor((innerWidth * innerHeight) / 26000);
-        count = Math.max(28, Math.min(count, 110));
+        var divisor = innerWidth < 640 ? 42000 : 26000;
+        var maxN = innerWidth < 640 ? 56 : 110;
+        var count = Math.floor((innerWidth * innerHeight) / divisor);
+        count = Math.max(20, Math.min(count, maxN));
         for (var i = 0; i < count; i++) {
           particles.push({
             x: Math.random() * innerWidth,
@@ -755,7 +783,14 @@
         { passive: true }
       );
 
+      var rafId = 0;
+      var particlesRunning = true;
+
       function tick() {
+        if (!particlesRunning || document.hidden) {
+          rafId = 0;
+          return;
+        }
         ctx.clearRect(0, 0, innerWidth, innerHeight);
         for (var i = 0; i < particles.length; i++) {
           var p = particles[i];
@@ -768,9 +803,31 @@
           ctx.fillStyle = "rgba(148, 163, 184, " + p.a + ")";
           ctx.fill();
         }
-        requestAnimationFrame(tick);
+        rafId = requestAnimationFrame(tick);
       }
-      requestAnimationFrame(tick);
+
+      function startParticles() {
+        if (particlesRunning && !document.hidden && !rafId) {
+          rafId = requestAnimationFrame(tick);
+        }
+      }
+
+      document.addEventListener(
+        "visibilitychange",
+        function () {
+          if (document.hidden) {
+            particlesRunning = false;
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = 0;
+          } else {
+            particlesRunning = true;
+            startParticles();
+          }
+        },
+        { passive: true }
+      );
+
+      startParticles();
     })();
   </script>
 </body>
